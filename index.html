@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Juniper the Cat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    :root{
+      --bg1: #cf55bf;
+      --bg2: #916e31;
+      --accent: #531b2a;
+      --cat1: #6b401a;
+      --cat2: #f4c28d;
+      --shadow: rgba(0,0,0,0.15);
+    }
+
+    html,body{height:100%;margin:0;}
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      /* richer sakura-style background (layered gradients + subtle texture) */
+      background:
+        radial-gradient(circle at 20% 8%, rgba(255,255,255,0.35), transparent 8%),
+        radial-gradient(circle at 85% 25%, rgba(255,240,245,0.20), transparent 10%),
+        linear-gradient(180deg, #fff7fb 0%, #ffeef6 22%, #ffdbe8 48%, #ffc8e0 72%, #f6d9bf 100%),
+        repeating-radial-gradient(circle at 50% 10%, rgba(255,255,255,0.03) 0 2px, transparent 2px 8px);
+      background-blend-mode: screen, overlay, normal, overlay;
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow: hidden;
+      position: relative; /* ensure absolutely-positioned heart wrappers align to this container */
+    }
+
+    .stage {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
+      transform-origin:center;
+      filter: drop-shadow(0 8px 24px var(--shadow));
+    }
+
+    h1 {
+      margin:0;
+      font-size:20px;
+      letter-spacing:0.6px;
+      color:#6b3b25;
+      text-transform:capitalize;
+      text-align:center;
+      text-shadow: 0 1px 0 #fff;
+    }
+
+    svg {
+      width: 360px;
+      cursor: pointer;
+      transition: transform 0.25s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    svg:hover { transform: scale(1.02); }
+
+    /* subtle glowing rim */
+    svg g, svg circle, svg ellipse, svg path, svg polygon {
+      transition: filter 0.2s ease;
+    }
+
+    /* forehead click target highlight */
+    .forehead { cursor: pointer; pointer-events: all; } /* ensure hit-testing across browsers */
+
+    /* heart style (fixed: use inline SVG hearts, avoid pseudo-elements that created a square) */
+    .heart {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      pointer-events: none;
+      will-change: transform, opacity;
+      background: transparent;
+      z-index: 9999; /* ensure hearts render above the UI */
+    }
+    /* small pulse when clicked */
+    .pulse {
+      animation: pulseScale .5s ease;
+    }
+    @keyframes pulseScale {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* eyelid rectangle (hidden by default) */
+    .eyelid {
+      fill: #e6954e;
+      opacity: 0;
+    }
+
+    /* accessible focus ring for forehead (disabled default rectangle to avoid visual artifact) */
+    .forehead:focus { outline: none; } /* keep keyboard activation but avoid the rectangular outline */
+  </style>
+</head>
+<body>
+  <div class="stage">
+   <!-- SVG CAT (updated to include eyelids & ear ids) -->
+    <svg id="juniper" viewBox="0 0 200 200" role="img" aria-labelledby="juniperTitle">
+      <title id="juniperTitle">Juniper the Cat</title>
+
+      <!-- Body -->
+      <ellipse cx="100" cy="140" rx="60" ry="70" fill="#e6954e" />
+      <ellipse cx="100" cy="160" rx="35" ry="50" fill="#f4c28d" />
+
+      <!-- Head -->
+      <circle cx="100" cy="70" r="50" fill="#e6954e" />
+
+      <!-- Ears -->
+      <polygon id="ear-left" points="60,40 80,10 85,50" fill="#b05c2c"/>
+      <polygon id="ear-right" points="140,40 120,10 115,50" fill="#b05c2c"/>
+      <polygon points="64,36 80,14 82,40" fill="#f7a58c"/>
+      <polygon points="136,36 120,14 118,40" fill="#f7a58c"/>
+
+      <!-- Eyes -->
+      <g class="eye left">
+        <circle cx="80" cy="70" r="18" fill="white"/>
+        <circle class="pupil" cx="80" cy="70" r="5" fill="black"/>
+        <rect class="eyelid" x="62" y="58" width="36" height="36" rx="18" ry="18" />
+      </g>
+
+      <g class="eye right">
+        <circle cx="120" cy="70" r="18" fill="white"/>
+        <circle class="pupil" cx="120" cy="70" r="5" fill="black"/>
+        <rect class="eyelid" x="102" y="58" width="36" height="36" rx="18" ry="18" />
+      </g>
+
+      <!-- Nose (triangle for clearer cat look) -->
+      <polygon points="96,82 104,82 100,88" fill="#e04b6b"/>
+      <!-- Mouth -->
+      <path d="M92 92 Q100 100 108 92" stroke="black" stroke-width="2" fill="none"/>
+
+      <!-- Whiskers -->
+      <line x1="60" y1="80" x2="30" y2="75" stroke="black" stroke-width="2"/>
+      <line x1="60" y1="85" x2="30" y2="85" stroke="black" stroke-width="2"/>
+      <line x1="140" y1="80" x2="170" y2="75" stroke="black" stroke-width="2"/>
+      <line x1="140" y1="85" x2="170" y2="85" stroke="black" stroke-width="2"/>
+
+      <!-- Tail (added) -->
+      <path id="tail" d="M155 160 C185 150 190 120 170 110" stroke="#e6954e" stroke-width="18" stroke-linecap="round" fill="none"/>
+
+      <!-- Forehead click zone (slightly adjusted) -->
+      <!-- use a nearly-transparent fill so the rect is reliably hit-testable -->
+      <rect class="forehead" x="75" y="30" width="50" height="25" fill="black" fill-opacity="0.01" tabindex="0" aria-label="Pet Juniper's forehead" />
+    </svg>
+  </div>
+
+  <script>
+    const svg = document.getElementById('juniper');
+    const pupils = document.querySelectorAll('.pupil');
+    const forehead = document.querySelector('.forehead');
+    const body = document.querySelector('body');
+    const tail = document.querySelector('#tail');
+    const ears = {
+      left: document.querySelector('#ear-left'),
+      right: document.querySelector('#ear-right')
+    };
+    const eyelids = document.querySelectorAll('.eyelid');
+
+    // helper: convert client coords to svg coords using viewBox scaling (viewBox 200x200)
+    function clientToSvgPoint(clientX, clientY) {
+      const r = svg.getBoundingClientRect();
+      const vx = 200; // viewBox width
+      const vy = 200; // viewBox height (square)
+      const x = ((clientX - r.left) / r.width) * vx;
+      const y = ((clientY - r.top) / r.height) * vy;
+      return { x, y, rect: r };
+    }
+
+    // Eye follow cursor (improved: uses svg coordinate conversion)
+    document.addEventListener('mousemove', (e) => {
+      const p = clientToSvgPoint(e.clientX, e.clientY);
+
+      pupils.forEach(pupil => {
+        const eye = pupil.parentElement.querySelector('circle');
+        const cx = parseFloat(eye.getAttribute('cx'));
+        const cy = parseFloat(eye.getAttribute('cy'));
+
+        const dx = (p.x - cx) / 40; // control strength
+        const dy = (p.y - cy) / 40;
+
+        // keep pupil within a small radius
+        const max = 6;
+        const mag = Math.hypot(dx, dy);
+        const fx = mag > max ? (dx / mag) * max : dx;
+        const fy = mag > max ? (dy / mag) * max : dy;
+
+        gsap.to(pupil, { attr: { cx: cx + fx, cy: cy + fy }, duration: 0.18, ease: "Power1.easeOut" });
+      });
+    });
+
+    // periodic random blink
+    function blinkOnce() {
+      eyelids.forEach(el => gsap.to(el, { opacity: 1, duration: 0.08 }));
+      setTimeout(() => {
+        eyelids.forEach(el => gsap.to(el, { opacity: 0, duration: 0.18 }));
+      }, 120);
+    }
+    // random blink interval
+    function blinkLoop() {
+      blinkOnce();
+      setTimeout(blinkLoop, 2500 + Math.random()*3000);
+    }
+    blinkLoop();
+
+    // Tail idle wag
+    gsap.to(tail, { rotation: 6, transformOrigin: "100% 100%", repeat: -1, yoyo: true, duration: 1.6, ease: "sine.inOut" });
+
+    // hover svg: subtle breathe
+    svg.addEventListener('mouseenter', () => gsap.to('.stage', { scale:1.01, duration:0.25 }));
+    svg.addEventListener('mouseleave', () => gsap.to('.stage', { scale:1, duration:0.25 }));
+
+    // Hearts when clicking forehead (spawn from forehead center) - use inline SVG hearts to avoid rectangle artifact
+    function spawnHearts(fromRect) {
+      const NS = "http://www.w3.org/2000/svg";
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff7b9c';
+      console.log('spawnHearts fromRect', fromRect);
+      for (let i = 0; i < 6; i++) {
+        // create a wrapper div to position the SVG absolutely
+        const wrapper = document.createElement('div');
+        wrapper.className = 'heart';
+        body.appendChild(wrapper);
+
+        // create an inline svg heart
+        const svgEl = document.createElementNS(NS, 'svg');
+        svgEl.setAttribute('xmlns', NS);
+        svgEl.setAttribute('viewBox', '0 0 24 24');
+        svgEl.setAttribute('width', '22');
+        svgEl.setAttribute('height', '22');
+        svgEl.style.display = 'block';
+        const path = document.createElementNS(NS, 'path');
+
+        // simple heart path, fill will use accent variable
+        path.setAttribute('d', 'M12 21s-7.5-4.7-9-8.2S4.2 3 8.5 6.2C10 7.6 12 9.2 12 9.2s2-1.6 3.5-3C19.8 3 21.9 6.8 21 12.8 19.5 16.3 12 21 12 21z');
+        path.setAttribute('fill', accent);
+        path.setAttribute('opacity', '0.98');
+        svgEl.appendChild(path);
+        wrapper.appendChild(svgEl);
+
+        // starting position: centered on forehead with small random offset
+        const startX = fromRect.left + fromRect.width/2 + (Math.random()*24 - 12);
+        const startY = fromRect.top + fromRect.height/2 + (Math.random()*8 - 6);
+        console.log('spawnHeart', startX, startY);
+
+        // place wrapper exactly where forehead is (use left/top so it doesn't rely on transforms for initial placement)
+        wrapper.style.left = (startX - 11) + 'px';
+        wrapper.style.top = (startY - 11) + 'px';
+        wrapper.style.position = 'absolute';
+        gsap.set(wrapper, { scale: 0.08, opacity: 0, rotation: (Math.random()*40-20) });
+        gsap.to(wrapper, {
+          opacity: 1,
+          scale: 1,
+          y: '-=' + (120 + Math.random()*60),
+          x: '+=' + (Math.random() * 140 - 70),
+          rotation: Math.random()*90 - 45,
+          duration: 1.2 + Math.random()*0.8,
+          ease: "power2.out",
+          onComplete: () => wrapper.remove()
+        });
+      }
+    }
+
+    // pet interaction: forehead click/keyboard activate
+    function petAction() {
+      console.log('petAction triggered');
+      // pulse the stage
+      document.querySelector('.stage').classList.add('pulse');
+      setTimeout(()=>document.querySelector('.stage').classList.remove('pulse'), 500);
+
+      // ear twitch
+      gsap.fromTo(ears.left, { rotation: -6, transformOrigin: "70% 30%" }, { rotation: 0, duration: 0.22, yoyo: true, repeat: 1, ease: "sine.inOut" });
+      gsap.fromTo(ears.right, { rotation: 6, transformOrigin: "30% 30%" }, { rotation: 0, duration: 0.22, yoyo: true, repeat: 1, ease: "sine.inOut" });
+
+      // pupils dilate briefly
+      pupils.forEach(p => gsap.to(p, { attr: { r: 7 }, duration: 0.15, yoyo: true, repeat: 1 }));
+
+      spawnHearts(forehead.getBoundingClientRect());
+    }
+
+    forehead.addEventListener('click', petAction);
+    forehead.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { petAction(); e.preventDefault(); } });
+
+    // make sure hearts spawn at forehead even on resize
+    window.addEventListener('resize', () => { /* no-op: spawn uses getBoundingClientRect when clicked */ });
+
+    // small initial entrance animation
+    gsap.from('.stage', { y: 20, opacity: 0, duration: 0.8, ease: "power2.out" });
+
+    // expose some selectors for quick debug
+    // ...existing code...
+  </script>
+</body>
+</html>
